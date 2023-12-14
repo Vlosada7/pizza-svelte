@@ -1,5 +1,18 @@
 <script>
   import logo from '$lib/assets/logo.png'
+  import {auth} from '../firebase'
+  import {GoogleAuthProvider, signInWithPopup} from 'firebase/auth'
+
+  const login = async() => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const res = await signInWithPopup(auth, provider);
+      console.log(res)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
 </script>
 
 <header class=" text-black py-4">
@@ -13,7 +26,7 @@
         <li><a href='/menu' class="hover:text-red-500 transition-colors duration-300">Menu</a></li>
         <li><a href='/aboutUs' class="hover:text-red-500 transition-colors duration-300">About Us</a></li>
         <li>
-          <a href="/login" class="bg-red-500 hover:bg-white hover:text-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+          <a href="/" class="bg-red-500 hover:bg-white hover:text-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-300" on:click={login}>
             Login
           </a>
         </li>
