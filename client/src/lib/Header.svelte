@@ -12,12 +12,19 @@
         <li><a href='/' class="hover:text-red-500 transition-colors duration-300">Home</a></li>
         <li><a href='/menu' class="hover:text-red-500 transition-colors duration-300">Menu</a></li>
         <li><a href='/aboutUs' class="hover:text-red-500 transition-colors duration-300">About Us</a></li>
-        <li><a href='/cart' class="hover:text-red-500 transition-colors duration-300">Cart</a></li>
         <li>
-          <a href="#contact" class="bg-red-500 hover:bg-white hover:text-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+          <a href="/login" class="bg-red-500 hover:bg-white hover:text-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
             Login
           </a>
         </li>
+        <li>
+          <a href="/#" class="bg-red-500 hover:bg-white hover:text-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+            Logout
+          </a>
+        </li>
+        <li><a href='/cart' class="hover:text-red-500 transition-colors duration-300">Cart</a></li>
+        <li><a href='/profile' class="hover:text-red-500 transition-colors duration-300">Profile</a></li>
+
       </ul>
     </nav>
   </div>
