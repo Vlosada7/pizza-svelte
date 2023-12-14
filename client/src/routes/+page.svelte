@@ -1,2 +1,10 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script>
+	import Intro from "$lib/Intro.svelte";
+
+</script>
+
+<Intro 
+  title = "Nossa pizzaria"
+  content = "Venha conhecer sua nova pizzaria favorita"
+  img = "home"
+/>
