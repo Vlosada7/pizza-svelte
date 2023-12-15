@@ -4,24 +4,50 @@
   import {GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged} from 'firebase/auth'
   import { isLoggedIn, user} from './stores'
   import {goto} from '$app/navigation'
+  import {trpc} from '../trpc'
 
-  const login = async() => {
+  
+  const login = async () => {
     try {
       const provider = new GoogleAuthProvider();
       const res = await signInWithPopup(auth, provider);
+
       $user = res.user;
       $isLoggedIn = true;
-      const fullname = $user.displayName.split(' ');
-      const name = fullname[0];
-      let lastname = ''
-      if (fullname.length > 1) {
-        lastname = fullname.slice(1).join(' ');
-      }
-      goto('/profile')
+
+      await createUserInDatabase($user);
+
+      goto('/profile');
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  }
+  };
+
+  const createUserInDatabase = async ($user) => {
+    try {
+      const fullName = $user.displayName.split(' ');
+      const name = fullName[0];
+      let lastname = '';
+
+      if (fullName.length > 1) {
+        lastname = fullName.slice(1).join(' ');
+      }
+
+      const userData = {
+        name: name,
+        lastname: lastname,
+        email: $user.email,
+
+      };
+      console.log(userData.email);
+      const existingUser = await trpc.user.getByEmail.query(userData);
+      if (!existingUser) {
+        await trpc.user.create.mutate(userData);
+      } 
+    } catch (error) {
+      console.error("Erro ao criar/atualizar usuário no banco de dados:", error);
+    }
+  };
 
   const logout = async () => {
     try {
@@ -60,8 +86,8 @@
         {/if}
 
         {#if $isLoggedIn}
-          <li><a href='/cart' class="hover:text-red-500 transition-colors duration-300">Cart</a></li>
-          <li><a href='/profile' class="hover:text-red-500 transition-colors duration-300">Profile</a></li>
+        <li><a href='/profile' class="hover:text-red-500 transition-colors duration-300">Profile</a></li>
+        <li><a href='/cart' class="hover:text-red-500 transition-colors duration-300">Cart</a></li>
           <li>
             <a href="/" class="bg-red-500 hover:bg-white hover:text-red-500 text-white font-bold py-2 px-4 rounded transition-colors duration-300" on:click={logout}>
               Logout

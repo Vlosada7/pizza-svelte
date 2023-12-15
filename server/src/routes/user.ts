@@ -34,13 +34,25 @@ const updateUserSchema = z.object({
 export const updateUser = publicProcedure
 	.input(updateUserSchema)
 	.mutation(async ({ input }) => {
-		const updatedUser = await User.findByIdAndUpdate(input.id, input.update, {
+		const updatedUser = await User.findOneAndUpdate(input.email, input.update, {
 			new: true,
 		});
 		return updatedUser;
 	});
-
+export const getUserByEmail = publicProcedure
+	.input(
+		z.object({
+			email: z.string().email(),
+		})
+	)
+	.query(async ({ input }) => {
+		const user = await User.findOne({ email: input.email });
+		if (user) {
+			return user;
+		}
+	});
 export const userRouter = router({
 	create: createUser,
 	update: updateUser,
+	getByEmail: getUserByEmail,
 });
