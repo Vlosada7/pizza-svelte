@@ -12,7 +12,6 @@
     loadUserData();
   });
 
-  // Função para formatar o preço
   function formatPrice(price) {
     return `€${price.toFixed(2)}`;
   }
@@ -39,7 +38,7 @@
   function redirectToMenu() {
     goto('/menu');
   }
-  // Calcular o total do carrinho
+
   $: totalCarrinho = userData.cart?.items.reduce((total, item) => total + item.price * item.quantity, 0) || 0;
 
   async function removeItem(productId) {
@@ -54,7 +53,7 @@
   async function finalizeOrder() {
   try {
     await trpc.user.finalizeOrder.mutate({ email: $user.email });
-    loadUserData(); // Atualiza os dados do usuário para refletir as mudanças
+    loadUserData(); 
   } catch (error) {
     console.error('Erro ao finalizar o pedido:', error);
   }

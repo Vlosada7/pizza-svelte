@@ -39,7 +39,6 @@
         email: $user.email,
 
       };
-      console.log(userData.email);
       const existingUser = await trpc.user.getByEmail.query(userData);
       if (!existingUser) {
         await trpc.user.create.mutate(userData);

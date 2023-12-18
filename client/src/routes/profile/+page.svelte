@@ -38,7 +38,7 @@
   async function saveChanges() {
     try {
       const updateData = {
-        id: userData._id, // Certifique-se de que _id está disponível
+        id: userData._id, 
         update: {
           name: userData.name,
           lastname: userData.lastname,
@@ -49,7 +49,6 @@
 
       const updatedUser = await trpc.user.update.mutate(updateData);
       userData = updatedUser;
-      console.log('Dados atualizados:', userData);
       isEditing = false; 
     } catch (error) {
       console.error("Erro ao salvar alterações:", error);
@@ -69,7 +68,8 @@
           }
         });
       }
-      loadUserData(); // Atualiza os dados do usuário e o carrinho
+      alert("Produtos adicionados ao carrinho com sucesso!");
+      loadUserData();
     } catch (error) {
       console.error("Erro ao repetir o pedido:", error);
     }

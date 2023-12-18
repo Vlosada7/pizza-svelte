@@ -21,7 +21,6 @@ const CartItemZodSchema = z.object({
 export const createUser = publicProcedure
 	.input(createUserSchema)
 	.mutation(async ({ input }) => {
-		// Verifica se já existe um usuário com o mesmo e-mail
 		const existingUser = await User.findOne({ email: input.email });
 		if (existingUser) {
 			throw new Error("Email já está em uso.");
@@ -71,25 +70,20 @@ export const addItemToCart = publicProcedure
 			throw new Error("Usuário não encontrado.");
 		}
 
-		// Verifica se o usuário tem um carrinho, se não, cria um novo
 		if (!user.cart) {
 			user.cart = { items: [], total: 0 };
 		}
 
-		// // // Procura o item no carrinho
 		const existingItemIndex = user.cart.items.findIndex(
 			(cartItem) => cartItem.productId === input.item.productId
 		);
 
 		if (existingItemIndex > -1) {
-			// Se o item já existe no carrinho, atualiza a quantidade
 			user.cart.items[existingItemIndex].quantity += input.item.quantity;
 		} else {
-			// Se o item não existe no carrinho, adiciona-o
 			user.cart.items.push(input.item);
 		}
 
-		// // // Atualiza o total do carrinho
 		user.cart.total = user.cart.items.reduce(
 			(total, item) => total + item.price * item.quantity,
 			0
@@ -123,7 +117,7 @@ export const addItemToCart = publicProcedure
 				if (user.cart.items[itemIndex].quantity > 1) {
 					user.cart.items[itemIndex].quantity -= 1;
 				} else {
-					user.cart.items.splice(itemIndex, 1); // Remove o item do array
+					user.cart.items.splice(itemIndex, 1);
 				}
 
 				// Recalcula o total do carrinho
@@ -153,15 +147,13 @@ export const addItemToCart = publicProcedure
 					throw new Error("Usuário não encontrado.");
 				}
 
-				// Cria um novo pedido com os itens do carrinho
 				const newOrder = {
 					items: user.cart.items,
 					total: user.cart.total,
 					orderDate: new Date(),
-					status: "Finalizado", // ou qualquer status que você deseje
+					status: "Finalizado",
 				};
 
-				// Adiciona o novo pedido a lastOrders e limpa o carrinho
 				user.lastOrders.push(newOrder);
 				user.cart = { items: [], total: 0 };
 
