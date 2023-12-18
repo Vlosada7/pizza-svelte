@@ -3,6 +3,7 @@
   import { isLoggedIn, user } from '../../lib/stores';
   import { trpc } from '../../trpc';
 
+  let pizzasData = [];
   let userData = {}; 
   let isEditing = false;
 
@@ -14,10 +15,17 @@
     loadUserData();
   }
 
+  function formatPrice(price) {
+    return `€${price.toFixed(2)}`;
+  }
+
   async function loadUserData() {
     try {
       const response = await trpc.user.getByEmail.query($user);
       userData = response || {};
+
+      const pizzaResponse = await trpc.pizza.get.query();
+      pizzasData = pizzaResponse; 
     } catch (error) {
       console.error("Erro ao carregar dados do usuário:", error);
     }
@@ -45,6 +53,25 @@
       isEditing = false; 
     } catch (error) {
       console.error("Erro ao salvar alterações:", error);
+    }
+  }
+
+  async function repeatOrder(orderIndex) {
+    const order = userData.lastOrders[orderIndex];
+    try {
+      for (const item of order.items) {
+        await trpc.user.addItemToCart.mutate({
+          email: $user.email,
+          item: {
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price
+          }
+        });
+      }
+      loadUserData(); // Atualiza os dados do usuário e o carrinho
+    } catch (error) {
+      console.error("Erro ao repetir o pedido:", error);
     }
   }
 </script>
@@ -79,3 +106,46 @@
     {/if}
   </div>
 {/if}
+
+<h2 class="text-2xl font-bold my-4 text-center">Últimos Pedidos</h2>
+
+{#if $isLoggedIn && userData.lastOrders && userData.lastOrders.length > 0}
+  <div class="space-y-6 max-w-4xl mx-auto">
+    {#each userData.lastOrders as order, orderIndex}
+      <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
+        <h3 class="font-bold text-lg mb-3">Pedido feito em: {new Date(order.orderDate).toLocaleDateString()}</h3>
+        <ul class="space-y-2">
+          {#each order.items as item}
+            {#each pizzasData as pizza}
+              {#if pizza._id === item.productId}
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <img src={pizza.imageUrl} alt={pizza.name} class="w-16 h-16 rounded-full mr-4" />
+                    <div>
+                      <h4 class="text-md font-semibold">{pizza.name}</h4>
+                      <p class="text-sm">Quantidade: {item.quantity}</p>
+                      <p class="text-sm">Preço: {formatPrice(item.price)}</p>
+                    </div>
+                  </div>
+                  <span class="font-semibold">{formatPrice(item.price * item.quantity)}</span>
+                </li>
+              {/if}
+            {/each}
+          {/each}
+        </ul>
+        <div class="flex justify-between items-center mt-4">
+          <span class="text-xl font-bold">Total: {formatPrice(order.total)}</span>
+          <button 
+            class="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            on:click={() => repeatOrder(orderIndex)}
+          >
+            Repetir Pedido
+          </button>
+        </div>
+      </div>
+    {/each}
+  </div>
+{:else}
+  <p class="text-center text-gray-600">Nenhum pedido realizado.</p>
+{/if}
+
