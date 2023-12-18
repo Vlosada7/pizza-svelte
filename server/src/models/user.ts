@@ -16,10 +16,10 @@ interface CartItem {
   price: number;
 }
 
-const CartItemSchema = new Schema({
-  productId: { type: String, required: true },
-  quantity: { type: Number, required: true },
-  price: { type: Number, required: true }
+export const CartItemSchema = new Schema({
+	productId: { type: String, required: true },
+	quantity: { type: Number, required: true },
+	price: { type: Number, required: true },
 });
 
 interface Cart {
@@ -47,13 +47,13 @@ const OrderSchema = new Schema({
 });
 
 const UserSchema = new Schema({
-  name: { type: String, required: true },
-  lastname: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  address: { type: String },
-  phone: { type: String },
-  cart: { type: [CartSchema] },
-  lastOrders: { type: [OrderSchema] }
+	name: { type: String, required: true },
+	lastname: { type: String, required: true },
+	email: { type: String, required: true, unique: true },
+	address: { type: String },
+	phone: { type: String },
+	cart: CartSchema,
+	lastOrders: { type: [OrderSchema] },
 });
 
 interface UserDocument extends User, Document {}
