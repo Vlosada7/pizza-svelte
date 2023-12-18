@@ -88,7 +88,7 @@ export const addItemToCart = publicProcedure
 			// Se o item não existe no carrinho, adiciona-o
 			user.cart.items.push(input.item);
 		}
-		
+
 		// // // Atualiza o total do carrinho
 		user.cart.total = user.cart.items.reduce(
 			(total, item) => total + item.price * item.quantity,
@@ -102,9 +102,39 @@ export const addItemToCart = publicProcedure
 		}
 	});
 
+export const removeItemFromCart = publicProcedure
+	.input(
+		z.object({
+			email: z.string(),
+			productId: z.string(),
+		})
+	)
+	.mutation(async ({ input }) => {
+		const user = await User.findOne({ email: input.email });
+		if (!user) {
+			throw new Error("Usuário não encontrado.");
+		}
+
+		// Remover o item do carrinho
+		user.cart.items = user.cart.items.filter(
+			(item) => item.productId !== input.productId
+		);
+		user.cart.total = user.cart.items.reduce(
+			(total, item) => total + item.price * item.quantity,
+			0
+		);
+		try {
+			await user.save();
+			return user.cart;
+		} catch (error) {
+			console.error("Erro ao retirar produto", error);
+		}
+	});
+
 export const userRouter = router({
 	create: createUser,
 	update: updateUser,
 	getByEmail: getUserByEmail,
 	addItemToCart,
+	removeItemFromCart,
 });
