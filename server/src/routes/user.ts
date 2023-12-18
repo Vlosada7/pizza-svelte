@@ -102,34 +102,78 @@ export const addItemToCart = publicProcedure
 		}
 	});
 
-export const removeItemFromCart = publicProcedure
-	.input(
-		z.object({
-			email: z.string(),
-			productId: z.string(),
-		})
-	)
-	.mutation(async ({ input }) => {
-		const user = await User.findOne({ email: input.email });
-		if (!user) {
-			throw new Error("Usuário não encontrado.");
-		}
+	export const removeItemFromCart = publicProcedure
+		.input(
+			z.object({
+				email: z.string(),
+				productId: z.string(),
+			})
+		)
+		.mutation(async ({ input }) => {
+			const user = await User.findOne({ email: input.email });
+			if (!user) {
+				throw new Error("Usuário não encontrado.");
+			}
 
-		// Remover o item do carrinho
-		user.cart.items = user.cart.items.filter(
-			(item) => item.productId !== input.productId
-		);
-		user.cart.total = user.cart.items.reduce(
-			(total, item) => total + item.price * item.quantity,
-			0
-		);
-		try {
-			await user.save();
-			return user.cart;
-		} catch (error) {
-			console.error("Erro ao retirar produto", error);
-		}
-	});
+			const itemIndex = user.cart.items.findIndex(
+				(item) => item.productId === input.productId
+			);
+
+			if (itemIndex > -1) {
+				if (user.cart.items[itemIndex].quantity > 1) {
+					user.cart.items[itemIndex].quantity -= 1;
+				} else {
+					user.cart.items.splice(itemIndex, 1); // Remove o item do array
+				}
+
+				// Recalcula o total do carrinho
+				user.cart.total = user.cart.items.reduce(
+					(total, item) => total + item.price * item.quantity,
+					0
+				);
+			}
+
+			try {
+				await user.save();
+				return user.cart;
+			} catch (error) {
+				console.error("Erro ao retirar produto", error);
+			}
+		});
+
+		export const finalizeOrder = publicProcedure
+			.input(
+				z.object({
+					email: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const user = await User.findOne({ email: input.email });
+				if (!user) {
+					throw new Error("Usuário não encontrado.");
+				}
+
+				// Cria um novo pedido com os itens do carrinho
+				const newOrder = {
+					items: user.cart.items,
+					total: user.cart.total,
+					orderDate: new Date(),
+					status: "Finalizado", // ou qualquer status que você deseje
+				};
+
+				// Adiciona o novo pedido a lastOrders e limpa o carrinho
+				user.lastOrders.push(newOrder);
+				user.cart = { items: [], total: 0 };
+
+				try {
+					await user.save();
+					return user;
+				} catch (error) {
+					console.error("Erro ao passar o carrinho para os lastOrders", error);
+				}
+			});
+	
+
 
 export const userRouter = router({
 	create: createUser,
@@ -137,4 +181,5 @@ export const userRouter = router({
 	getByEmail: getUserByEmail,
 	addItemToCart,
 	removeItemFromCart,
+	finalizeOrder,
 });

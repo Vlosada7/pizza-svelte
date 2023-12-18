@@ -10,9 +10,11 @@
 	 * @type {{ img: any; name: any; description: any; price: any; }}
 	 */
    export let info;
-  
 
+  let isInCart = false;
+  let quantity = 1;
   const userEmail = $user.email
+
   const addToCart = async () => {
     // Constrói o objeto 'item'
     const item = {
@@ -23,9 +25,9 @@
 
     try {
       // Chama a função tRPC
-      console.log(item)
       const response = await trpc.user.addItemToCart.mutate({ email: userEmail, item: item });
       console.log("Resposta:", response);
+      isInCart = true;
     } catch (error) {
       console.error("Erro ao adicionar ao carrinho:", error);
     }

@@ -51,9 +51,15 @@
     }
   }
 
-  function finalizeOrder() {
-    // Lógica para finalizar o pedido
+  async function finalizeOrder() {
+  try {
+    await trpc.user.finalizeOrder.mutate({ email: $user.email });
+    loadUserData(); // Atualiza os dados do usuário para refletir as mudanças
+  } catch (error) {
+    console.error('Erro ao finalizar o pedido:', error);
   }
+}
+
 
 </script>
 
