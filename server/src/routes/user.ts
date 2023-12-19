@@ -1,6 +1,14 @@
 import { publicProcedure, router } from "../trpc";
 import { z } from "zod";
 import User, { CartItemSchema } from "../models/user";
+import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
+
+const mailersend = new MailerSend({
+	apiKey:
+		"mlsn.6029fe58573db6be6baf7ec1ec04a674c8898c8932dbdc2cad0b5e21c7461878",
+});
+
+const sentFrom = new Sender("victor@prexfy.com", "Victor Losada");
 
 const createUserSchema = z.object({
 	name: z.string(),
@@ -100,74 +108,86 @@ export const addItemToCart = publicProcedure
 		}
 	});
 
-	export const removeItemFromCart = publicProcedure
-		.input(
-			z.object({
-				email: z.string(),
-				productId: z.string(),
-			})
-		)
-		.mutation(async ({ input }) => {
-			const user = await User.findOne({ email: input.email });
-			if (!user) {
-				throw new Error("Usuário não encontrado.");
+export const removeItemFromCart = publicProcedure
+	.input(
+		z.object({
+			email: z.string(),
+			productId: z.string(),
+		})
+	)
+	.mutation(async ({ input }) => {
+		const user = await User.findOne({ email: input.email });
+		if (!user) {
+			throw new Error("Usuário não encontrado.");
+		}
+
+		const itemIndex = user.cart.items.findIndex(
+			(item) => item.productId === input.productId
+		);
+
+		if (itemIndex > -1) {
+			if (user.cart.items[itemIndex].quantity > 1) {
+				user.cart.items[itemIndex].quantity -= 1;
+			} else {
+				user.cart.items.splice(itemIndex, 1);
 			}
 
-			const itemIndex = user.cart.items.findIndex(
-				(item) => item.productId === input.productId
+			// Recalcula o total do carrinho
+			user.cart.total = user.cart.items.reduce(
+				(total, item) => total + item.price * item.quantity,
+				0
+			);
+		}
+
+		try {
+			await user.save();
+			return user.cart;
+		} catch (error) {
+			console.error("Erro ao retirar produto", error);
+		}
+	});
+
+export const finalizeOrder = publicProcedure
+	.input(
+		z.object({
+			email: z.string(),
+		})
+	)
+	.mutation(async ({ input }) => {
+		const user = await User.findOne({ email: input.email });
+		if (!user) {
+			throw new Error("Usuário não encontrado.");
+		}
+
+		const newOrder = {
+			items: user.cart.items,
+			total: user.cart.total,
+			orderDate: new Date(),
+			status: "Finalizado",
+		};
+
+		const recipients = [new Recipient(`${input.email}`, `${input.email}`)];
+
+		const emailParams = new EmailParams()
+			.setFrom(sentFrom)
+			.setTo(recipients)
+			.setReplyTo(sentFrom)
+			.setSubject("Obrigado pela sua compra.")
+			.setText(
+				"Seu pedido foi finalizado com sucesso. Obrigado por comprar conosco!"
 			);
 
-			if (itemIndex > -1) {
-				if (user.cart.items[itemIndex].quantity > 1) {
-					user.cart.items[itemIndex].quantity -= 1;
-				} else {
-					user.cart.items.splice(itemIndex, 1);
-				}
+		user.lastOrders.push(newOrder);
+		user.cart = { items: [], total: 0 };
 
-				// Recalcula o total do carrinho
-				user.cart.total = user.cart.items.reduce(
-					(total, item) => total + item.price * item.quantity,
-					0
-				);
-			}
-
-			try {
-				await user.save();
-				return user.cart;
-			} catch (error) {
-				console.error("Erro ao retirar produto", error);
-			}
-		});
-
-		export const finalizeOrder = publicProcedure
-			.input(
-				z.object({
-					email: z.string(),
-				})
-			)
-			.mutation(async ({ input }) => {
-				const user = await User.findOne({ email: input.email });
-				if (!user) {
-					throw new Error("Usuário não encontrado.");
-				}
-
-				const newOrder = {
-					items: user.cart.items,
-					total: user.cart.total,
-					orderDate: new Date(),
-					status: "Finalizado",
-				};
-
-				user.lastOrders.push(newOrder);
-				user.cart = { items: [], total: 0 };
-
-				try {
-					await user.save();
-					return user;
-				} catch (error) {
-					console.error("Erro ao passar o carrinho para os lastOrders", error);
-				}
-			});
+		try {
+			await user.save();
+			await mailersend.email.send(emailParams);
+			return user;
+		} catch (error) {
+			console.error("Erro ao passar o carrinho para os lastOrders", error);
+		}
+	});
 	
 
 
