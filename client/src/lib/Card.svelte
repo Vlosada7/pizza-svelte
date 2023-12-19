@@ -41,28 +41,17 @@
   };
 
   const removeFromCart = async () => {
-    if (quantity > 1) {
-      const item = {
-        productId: info._id,
-        quantity: quantity - 1,
-        price: info.price,
-      };
-
-      try {
-        await trpc.user.removeItemFromCart.mutate({ email: userEmail, productId: info._id });
-        quantity -= 1;
-      } catch (error) {
-        console.error('Erro ao remover item:', error);
-      }
-    } else if (quantity === 1) {
-      try {
-        await trpc.user.removeItemFromCart.mutate({ email: userEmail, productId: info._id });
-        quantity = 0;
-      } catch (error) {
-        console.error('Erro ao remover item:', error);
-      }
+  if (quantity > 0) {
+    try {
+      const response = await trpc.user.removeItemFromCart.mutate({ email: userEmail, productId: info._id });
+      // Atualiza a quantidade com a resposta do backend
+      const cartItem = response.items.find(item => item.productId === info._id);
+      quantity = cartItem ? cartItem.quantity : 0;
+    } catch (error) {
+      console.error('Erro ao remover item:', error);
     }
-  };
+  }
+};
 </script>
 
 <div class="w-60 h-60 overflow-hidden rounded-lg">
