@@ -16,7 +16,7 @@
       $isLoggedIn = true;
 
       await createUserInDatabase($user);
-
+      console.log($user)
       goto('/profile');
     } catch (error) {
       console.error(error);
@@ -53,6 +53,7 @@
       await signOut(auth);
       $isLoggedIn = false;
       $user = {}
+      console.log($user)
     } catch (error) {
       console.error(error)
     }

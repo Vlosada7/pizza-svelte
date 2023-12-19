@@ -39,9 +39,13 @@ const updateUserSchema = z.object({
 export const updateUser = publicProcedure
 	.input(updateUserSchema)
 	.mutation(async ({ input }) => {
-		const updatedUser = await User.findOneAndUpdate(input.email, input.update, {
-			new: true,
-		});
+		const updatedUser = await User.findOneAndUpdate(
+			{ _id: input.id },
+			input.update,
+			{
+				new: true,
+			}
+		);
 		return updatedUser;
 	});
 export const getUserByEmail = publicProcedure

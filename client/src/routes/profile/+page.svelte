@@ -46,7 +46,6 @@
           phone: userData.phone
         }
       };
-
       const updatedUser = await trpc.user.update.mutate(updateData);
       userData = updatedUser;
       isEditing = false; 
