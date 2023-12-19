@@ -28,7 +28,7 @@
   const addToCart = async () => {
     const item = {
       productId: info._id,
-      quantity: quantity + 1, 
+      quantity: 1, 
       price: info.price,
     };
 
